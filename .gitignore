@@ -1,0 +1,54 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+myVenv/
+agentsvenv/
+ENV/
+
+# ---- TensorBoard / training artifacts ----
+runs/
+*.png
+rew_plot.png
+
+# Generated models from a fresh run (checked-in trained models are kept explicitly)
+/model.pth
+/model.onnx
+
+# ---- Unity built environments (large binaries; not committed) ----
+# The compiled standalone builds (mlagentsProj.exe, UnityPlayer.dll, *_Data/, etc.)
+# are excluded. See README for how to build them.
+EnvB_DQN29/
+RandomPath0/
+RandomPath1/
+RandomPath2/
+RandomPath2Slow/
+*.exe
+*.dll
+UnityPlayer.dll
+MonoBleedingEdge/
+*_Data/
+*_BurstDebugInformation_DoNotShip/
+
+# ---- IDE / OS ----
+.idea/
+.vscode/
+.vs/
+*.csproj
+*.sln
+.DS_Store
+Thumbs.db
+
+# ---- Misc large / redundant ----
+*.zip
+*.mp4
+*.pptx

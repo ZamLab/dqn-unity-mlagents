@@ -1,0 +1,2 @@
+mlagents==1.0.0
+matplotlib==3.8.3
