@@ -234,6 +234,19 @@ As the number of episodes increases, the agent converges to the rational
 strategy π*. For larger action/state spaces, increasing the batch size and
 decreasing `EPS_DECAY` (to increase exploration) can also help.
 
+### RandomPath — results (animated)
+
+Training the RandomPath agent by launching the external Python trainer
+(`python dqn_mlagents.py --environment ...`), with episodes counting up in the
+console while the environment runs:
+
+![RandomPath training](media/training.gif)
+
+The trained RandomPath agent running in inference in the Unity build, collecting
+coins and accumulating reward level by level:
+
+![RandomPath inference](media/randompath_inference.gif)
+
 ## A Coin in the Room
 
 A second environment was designed where a neural network becomes more useful as
@@ -266,6 +279,14 @@ neurons per layer.
 **Plots.** All plots are saved with TensorBoard under `runs`. The mean-reward
 plot is somewhat unstable but increases roughly logarithmically; the loss plot
 increases as training progresses.
+
+### Coin in the Room — results (animated)
+
+The trained agent navigating the room in inference: steering with its ray
+sensors toward the coin while avoiding the walls (the overlay shows distance
+travelled and cumulative reward):
+
+![Coin in the Room inference](media/coin_in_the_room_inference.gif)
 
 ## Results
 
