@@ -6,21 +6,48 @@
 
 ## Introduction
 
-This project focuses on reinforcement learning. Simple environments are built
-in the Unity Game Engine using the `mlagents` package and are then trained with
-a **DQN** (Deep Q-Network) algorithm implemented in PyTorch, connected to the
-environment through a Gym wrapper.
+**The main goal of this project is to drive Unity ML-Agents from an external,
+custom Python trainer** — training an agent by running a plain Python script
+instead of invoking the built-in `mlagents-learn` command-line tool.
 
-The goal is to examine the agent's behaviour in stochastic environments — to
-what extent it converges to rational decisions — as well as its behaviour in
-deterministic environments. The environments are kept simple, mainly because
-training takes significant time without GPU acceleration, and because the
-purpose is to study the behaviour of an algorithm that combines Q-learning with
-neural networks.
+Out of the box, ML-Agents trains agents through its own CLI and its own
+implementations of a small set of algorithms (PPO, SAC, etc.). That is
+convenient, but it couples the training loop to the framework: you get the
+algorithms ML-Agents ships, configured the way ML-Agents expects. By instead
+connecting to the environment through the **Unity Gym wrapper**, the environment
+becomes an ordinary `gym`-style object that any Python code can step. The
+training loop, the network, the optimizer and the exploration policy all live in
+user code — which means **any reinforcement-learning algorithm can be plugged in**,
+not just the ones bundled with ML-Agents.
 
-The sections below describe how the environments and the algorithm were
-implemented, which packages and tools were used and how they connect, how
-results are evaluated, and how to run the agent in inference.
+To demonstrate this, the project implements a **DQN** (Deep Q-Network) agent
+entirely from scratch in PyTorch and uses it to train agents inside custom Unity
+environments. DQN is not provided by ML-Agents' default trainers, so it is a
+concrete example of the extra freedom the external-trainer approach unlocks; the
+same harness would accept any other algorithm (REINFORCE, actor-critic
+variants, custom research code, and so on).
+
+A secondary goal is to study the resulting agent's behaviour — whether it
+converges to the rational (reward-maximizing) policy — in both **deterministic**
+and **stochastic** environments. The environments are kept simple, mainly
+because training is CPU-bound and slow without GPU acceleration, and because the
+focus is the training pipeline and convergence behaviour rather than raw scale.
+
+The sections below describe how the environments and the DQN algorithm were
+implemented, how the external trainer connects to Unity, how results are
+evaluated, and how to run the agent in inference. Result figures from actual
+training and inference runs are collected in the [Results](#results) section.
+
+### Why an external trainer?
+
+- **Algorithm freedom** — the training loop is ordinary Python, so any RL
+  algorithm can be used, not only ML-Agents' built-ins.
+- **Full control** — network architecture, replay buffer, optimizer, loss,
+  exploration schedule and logging are all user code and can be modified freely.
+- **Standard tooling** — because the environment is exposed as a Gym environment,
+  the whole Python ecosystem (PyTorch, TensorBoard, etc.) applies directly.
+- **Portability of results** — trained policies are exported to ONNX and can be
+  dropped back into the Unity Editor for in-engine inference.
 
 ## Environment: RandomPathDQN
 
@@ -239,6 +266,60 @@ neurons per layer.
 **Plots.** All plots are saved with TensorBoard under `runs`. The mean-reward
 plot is somewhat unstable but increases roughly logarithmically; the loss plot
 increases as training progresses.
+
+## Results
+
+The figures below are captured from real training and inference runs. They show
+the external Python trainer driving Unity end to end: building/stepping the
+environment, training the DQN network, and running the trained policy back in the
+Unity build.
+
+### Environment design (RandomPath)
+
+The RandomPath environment as authored in the Unity Editor: a level-based board
+where, at each level, a coin spawns in one of three positions according to a
+per-level probability distribution. The agent (transform gizmo, left) chooses one
+position per level to maximize collected reward.
+
+![RandomPath environment in the Unity Scene view](media/randompath_environment_design.png)
+
+### Training and inference (RandomPath)
+
+A single view of the whole pipeline. **Left:** the external trainer's console
+output — the DQN training loop running to completion (`Episode 499/500`,
+`Completed`), saving the policy to `.onnx` and `.pth`, and then re-launching in
+`--inference` mode with the loaded `DQN(...)` architecture. **Right:** the Unity
+build running the trained agent, with the in-game overlay showing the current
+level and cumulative reward.
+
+![RandomPath training log and trained agent running in the Unity build](media/randompath_training_and_inference.png)
+
+### Running the external trainer from the command line
+
+The core of the project: the agent is trained and evaluated by invoking a plain
+Python script — for example
+`python dqn_mlagents.py --environment RandomPath2 --inference --modelname RandomPathv2.pth`
+— rather than the ML-Agents CLI. Each run loads the DQN network and prints the
+policy the agent follows as a sequence of action tensors (e.g.
+`[tensor([[2]]), tensor([[1]]), tensor([[0]]), tensor([[1]])]` → `bot, top, mid,
+top`), which matches the reward-maximizing strategy for that environment.
+
+![External Python trainer invoked from the command line, showing inferred policies](media/external_trainer_cli.png)
+
+### Inference in the "Coin in the Room" environment
+
+The second environment exercises the neural network with richer observations.
+**Right:** the 3D room with walls, the agent (white cube) and a coin (yellow
+sphere), plus the overlay reporting distance travelled and cumulative reward.
+**Left:** the trainer console showing the larger network for this task —
+`in_features=8` (the eight ray-sensor observations) into `256`-neuron layers —
+being loaded for inference.
+
+![Coin in the Room environment running under the trained agent](media/coin_in_the_room_inference.png)
+
+> The still frames above are drawn from screen recordings of the training and
+> inference sessions. They are meant to document the pipeline and the learned
+> behaviour; exact reward values will vary between runs.
 
 ## Versions Overview
 

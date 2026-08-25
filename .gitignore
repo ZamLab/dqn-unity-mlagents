@@ -17,8 +17,9 @@ ENV/
 
 # ---- TensorBoard / training artifacts ----
 runs/
-*.png
 rew_plot.png
+# (Report figures under media/ are committed intentionally; only the
+#  auto-generated training plot above is ignored.)
 
 # Generated models from a fresh run (checked-in trained models are kept explicitly)
 /model.pth

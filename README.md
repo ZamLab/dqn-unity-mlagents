@@ -1,17 +1,27 @@
-# DQN with Unity ML-Agents
+# External Python Trainer for Unity ML-Agents (DQN)
 
-A from-scratch **Deep Q-Network (DQN)** reinforcement-learning agent trained in
-custom **Unity ML-Agents** environments. The Unity environments are driven from
-Python through a Gym wrapper, and the DQN trainer is implemented in PyTorch —
-including experience replay, a separate target network, ε-greedy exploration,
+**Train Unity ML-Agents from your own Python script instead of the built-in
+`mlagents-learn` CLI.** By connecting to the environment through the Unity Gym
+wrapper, the training loop becomes ordinary Python code — so *any* RL algorithm
+can be plugged in, not only the ones bundled with ML-Agents.
+
+This repository demonstrates that pipeline with a from-scratch **Deep Q-Network
+(DQN)** — an algorithm ML-Agents does *not* ship by default — implemented in
+PyTorch with experience replay, a separate target network, ε-greedy exploration,
 and export of trained policies to both PyTorch (`.pth`) and ONNX (`.onnx`) for
 in-engine inference.
 
 ## Overview
 
-The project studies how a DQN agent behaves in **deterministic** vs.
-**stochastic** decision-making environments, and whether it converges to the
-rational (reward-maximizing) policy. Two families of environments are included:
+The core contribution is the **external trainer**: `dqn_mlagents.py` builds,
+steps and trains a Unity environment entirely from Python, replacing the
+ML-Agents command-line workflow and opening the door to arbitrary RL algorithms.
+As a case study it also examines how the trained DQN agent behaves in
+**deterministic** vs. **stochastic** environments, and whether it converges to
+the rational (reward-maximizing) policy. See [`REPORT.md`](REPORT.md) for the
+full write-up **including result figures** from real training and inference runs.
+
+Two families of environments are included:
 
 - **RandomPath** — a level-based environment where, at each level, the agent
   picks one of three positions and a coin spawns according to a per-level
@@ -21,11 +31,10 @@ rational (reward-maximizing) policy. Two families of environments are included:
   always moves forward and steers (±45°) using three custom SphereCast ray
   sensors that report wall/coin detections and distances (8 observations total).
 
-A full write-up of the environments, algorithm, experiments and results is in
-[`REPORT.md`](REPORT.md).
-
 ## Features
 
+- **External Python trainer** for Unity ML-Agents via the Gym wrapper — trains
+  from a script, not the `mlagents-learn` CLI, so any RL algorithm can be used.
 - DQN implemented in PyTorch: policy + target networks, replay memory, Huber
   loss, AdamW, soft target updates (τ).
 - ε-greedy exploration with exponential decay.
@@ -57,7 +66,8 @@ dqn-unity-mlagents/
 │   ├── RandomPathv1.{pth,onnx}
 │   ├── RandomPathv2.{pth,onnx}
 │   └── model2.pth
-├── REPORT.md                 # Full project report
+├── media/                    # Result figures used in REPORT.md
+├── REPORT.md                 # Full project report (with training/inference results)
 └── README.md
 ```
 
